@@ -1,19 +1,14 @@
 from typing import List
 from typing import Tuple
 import re
+import sys
 
 
 def part1(input_data: List[str]):
 
-    # retrieve the maximum dimension of the grid.
-    length, width = find_dimensions(input_data)
-    # create a hashmap What's the cost-benefit to either? with default value of 0
-    cloth_grid = [[[] for x in range(width)] for y in range(length)]
-
-    for command in input_data:
-        cut_id, cut_positions = parse_cuts(command)
-        increment_cut(cloth_grid, cut_id, cut_positions)
-
+    cloth_grid = generate_grid(input_data)
+    length = len(cloth_grid)
+    width = len(cloth_grid[0])
     counter = 0
     # then, loop through the entire area and sum up those with two or more.
     for x in range(length):
@@ -22,6 +17,19 @@ def part1(input_data: List[str]):
                 counter += 1
 
     return counter
+
+
+def generate_grid(input_data):
+    # retrieve the maximum dimension of the grid.
+    length, width = find_dimensions(input_data)
+    # Create a 2d array with empty lists.
+    cloth_grid = [[[] for x in range(width)] for y in range(length)]
+
+    for command in input_data:
+        cut_id, cut_positions = parse_cuts(command)
+        increment_cut(cloth_grid, cut_id, cut_positions)
+
+    return cloth_grid
 
 
 def find_dimensions(input_data: List[str]):
@@ -79,22 +87,35 @@ def increment_cut(cloth_grid, cut_id, cut_positions: List[Tuple[int, int]]):
 
 def part2(input_data: List[str]):
     # generate the cloth grid first.
+    cloth_grid = generate_grid(input_data)
+    length = len(cloth_grid)
+    width = len(cloth_grid[0])
+
     # after generating cloth grid, iterate starting from the first position.
-    # from left to right.
-        # if the length is more than two, ignore.
-        # if the length is one, find the value. check values to the right of it and to the bottom recursively.
-            # if the box has more than one value and contains the value, return false.
+    unique_claims = get_claim_ids(input_data)
+    overlapping_claims = set()
+    for x in range(length):
+        for y in range(width):
+            claims = cloth_grid[x][y]
+            if len(claims) != 1:
+                for v in claims:
+                    overlapping_claims.add(v)
 
-            # if the box is empty or does not contain the value, return true.
-            # if the box only contains the value, check right and bottom boxes too.
-        # if true, return the value.
-        # if false, continue iteration and checking.
+    result = unique_claims - overlapping_claims
+    return list(result)[0]
 
-    return
+
+def get_claim_ids(input_data: List[str]):
+    # getting the first number from the input data.
+    return set(map(get_id, input_data))
+
+
+def get_id(claim: str):
+    return int(re.search(r'\d+', claim).group())
 
 
 if __name__ == "__main__":
     part1_input = open("input1.txt", 'r')
     print(f"The answer to part 1 is: {part1(part1_input.read().splitlines())}")
-    part2_input = part1_input
+    part2_input = open("input1.txt", 'r')
     print(f"The answer to part 2 is: {part2(part2_input.read().splitlines())}")
